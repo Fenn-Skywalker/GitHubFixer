@@ -47,7 +47,7 @@ namespace Tmpl8
 			{
 				xvelocity += 1.0f;
 			}
-			if (xvelocity < 1.0f && xvelocity > -1.0f)
+			if (xvelocity < 1.0f && xvelocity > -1.0f) // failsafe for when friction values are higher
 			{
 				xvelocity = 0.0f;
 			}
@@ -108,12 +108,12 @@ namespace Tmpl8
 	{
 		if (posY < box.y)
 		{
-			posY = box.y - playerSize.h;
+			posY -= yOverlap;
 			onGround = true; // Player landed on top
 		}
 		else
 		{
-			posY = static_cast<float>(box.y + box.h); // Player hit the ceiling
+			posY += yOverlap; // Player hit the ceiling
 		}
 
 		yvelocity = 0.0f;
@@ -124,11 +124,11 @@ namespace Tmpl8
 	{
 		if (posX < box.x)
 		{
-			posX = static_cast<float>(box.x - playerSize.w); // Player hit the left side
+			posX -= xOverlap; // Player hit the left side
 		}
 		else
 		{
-			posX = static_cast<float>(box.x + box.w); // Player hit the right side
+			posX += xOverlap; // Player hit the right side
 		}
 		xvelocity = 0.0f;
 	}
