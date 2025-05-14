@@ -45,13 +45,15 @@ namespace Tmpl8
 	// -----------------------------------------------------------
 	// Main application tick function
 	// -----------------------------------------------------------
-	void Game::Tick(float deltaTime)
+	void Game::Tick(float deltaTime) //
 	{
+		deltaTime /= 1000; // Convert milliseconds to seconds
 		std::string keysleft = "Keys Left: " + std::to_string(key.getTotalKeys() - key.getKeys()); //Prepares the string for the keys left to be collected
 		screen->Clear(0xffffff);
 
-		player.Moving(startPos); //Controlls player movement and some basic physics
 		player.addCollisions(hitboxes); // Add the hitboxes to the player class and controls object collisions
+		player.Moving(startPos, deltaTime); //Controlls player movement and some basic physics
+		
 		
 
 		bgLayer.Draw(screen, { 0, 0 }); // Draw the background layer
@@ -69,7 +71,7 @@ namespace Tmpl8
 		player.Draw(screen, playersprite, false); // Draw the player
 		screen->Print(const_cast<char*>(keysleft.c_str()), 350, 20, 0xFFFFFF); // Print the keys left to be collected at the top of the screen
 
-		playersprite = charactersheet->GetSprite(player.currentframe()); //Gets the players sprite based on the current frame
+		playersprite = charactersheet->GetSprite(player.currentframe(deltaTime)); //Gets the players sprite based on the current frame
 		
 
 		if (key.getTotalKeys() - key.getKeys() == 0) //checks if all keys have been collected
@@ -87,23 +89,27 @@ namespace Tmpl8
 			doorsprite = keysheet->GetSprite(8); //swaps to the "closed door" sprite
 		}
 
-		if (GetAsyncKeyState(VK_SPACE)) //checks if the space bar is pressed
-		{
-			if (currentLevel == 4) //checks if its the last level
+        if (GetAsyncKeyState(VK_SPACE)) // checks if the space bar is pressed
+		{	
+			Sleep(300); // Sleep for 300 milliseconds to prevent spamming
+			if (GetAsyncKeyState(VK_DOWN)) //swaps levels
 			{
-				loadLevel(0); //loads the first level
-				key.resetCheck(); //resets the key check
-				key.setKeys(0); //resets the keys for the next level
-			}
-			else
-			{
-				loadLevel(currentLevel + 1); //loads the next level
-				key.resetCheck(); //resets the key check
-				key.setKeys(0); //resets the keys for the next level
+				if (currentLevel == 4) //checks if its the last level
+				{
+					loadLevel(0); //loads the first level
+					key.resetCheck(); //resets the key check
+					key.setKeys(0); //resets the keys for the next level
+				}
+				else
+				{
+					loadLevel(currentLevel + 1); //loads the next level
+					key.resetCheck(); //resets the key check
+					key.setKeys(0); //resets the keys for the next level
+				}
 			}
 		}
 
-		Sleep(25); // Sleep for 25 milliseconds to control the frame rate
+		Sleep(2); // Sleep for 2 milliseconds to control the frame rate
 	}
 
 

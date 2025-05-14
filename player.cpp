@@ -27,41 +27,48 @@ namespace Tmpl8
 	}
 	
 	//handles the acceleration/increasing of velocity
-	void Player::Accelerate()
+	void Player::Accelerate(float deltatime)
 	{
 		//compute deltas
-		float dx = Clamp(xvelocity, -10.0f, 10.0f);
+		float dx = Clamp(xvelocity, -5.0f, 5.0f);
 		posX += dx;
 	}
 
 	//reduces velocity when in contact with ground at a set rate for more organic movement
-	void Player::Friction()
+	void Player::Friction(float deltatime, bool moving)
 	{
-		if (onGround == true)
+		if (onGround == true) // if the player is on the ground
 		{
 			if (xvelocity > 0)
 			{
-				xvelocity -= 1.0f;
+				xvelocity -= fricspeed * deltatime;
 			}
 			if (xvelocity < 0)
 			{
-				xvelocity += 1.0f;
-			}
-			if (xvelocity < 1.0f && xvelocity > -1.0f) // failsafe for when friction values are higher
-			{
-				xvelocity = 0.0f;
+				xvelocity += fricspeed * deltatime;
 			}
 		}
+		else // if the player is in the air
+		{
+			if (xvelocity > 0)
+			{
+				xvelocity -= airresist * deltatime;
+			}
+			if (xvelocity < 0)
+			{
+				xvelocity += airresist * deltatime;
+			}
+		}
+
+		if (xvelocity != 0 && xvelocity < 0.05f && xvelocity > -0.05f && moving == false) { xvelocity = 0; }
 	}
 
 	//controls vertical acceleration and velocity/checks floor collision
-	void Player::Gravity()
+	void Player::Gravity(float deltatime)
 	{
-		if (onGround == false)
-		{
-			yvelocity += 1.0f;
+		
+			yvelocity += gravspeed * deltatime ;
 			posY += yvelocity;
-		}
 	}
 
 	//ensures player stays within the screen bounds
@@ -78,19 +85,19 @@ namespace Tmpl8
 		if (posX >= ScreenWidth - 16) { posX = ScreenWidth - 16, xvelocity = 0; }
 		if (posY < 0) { posY = 0, yvelocity = 0; }
 	}
-	void Player::ClampVelocity()
+	void Player::ClampVelocity() //sets certain velocity values to a set range
 	{
-		if (xvelocity > 10.0f) { xvelocity = 10.0f; }
-		if (xvelocity < -10.0f) { xvelocity = -10.0f; }
-		if (yvelocity > 10.0f) { yvelocity = 10.0f; }
-		if (yvelocity < -10.0f) { yvelocity = -10.0f; }
+		if (xvelocity > 5.0f) { xvelocity = 5.0f; }
+		if (xvelocity < -5.0f) { xvelocity = -5.0f; }
+		if (yvelocity > 5.0f) { yvelocity = 5.0f; }
+		if (yvelocity < -5.0f) { yvelocity = -5.0f; }
 	}
 
 	//sets y velocity to a negative value to simulate jumping
-	void Player::Jump()
+	void Player::Jump(float deltatime)
 	{
 		onGround = false;
-		yvelocity = -10.0f;
+		yvelocity -= jumpSpeed * deltatime;
 		posY += yvelocity;
 	}
 
@@ -139,7 +146,6 @@ namespace Tmpl8
 	void Player::addCollisions(std::vector<HBox> collisionObject)
 	{
 		onGround = false; // Reset at start of frame
-
 		for (const auto& box : collisionObject)
 		{
 			if (isOverlapping(box))
@@ -162,51 +168,21 @@ namespace Tmpl8
 		}
 	}
 
-
-
-
-
-
-	int Player::currentframe() // checking which frame to use
+	int Player::currentframe(float time) // checking which frame to use
 	{
 		if (onGround)
 		{
-			if (xvelocity > 0 && filler == 0)
+			if (xvelocity > 0)
 			{
 				currentFrame = 12;
-				filler = 1;
 			}
-			else if (xvelocity > 0 && (filler == 1 || filler == 3))
-			{
-				currentFrame = 13;
-				if (filler == 1) filler = 0;
-				else filler = 2;
-			}
-			else if (xvelocity > 0 && filler == 2)
-			{
-				currentFrame = 14;
-				filler = 3;
-			}
-			else if (xvelocity < 0 && filler == 0)
+			else if (xvelocity < 0) 
 			{
 				currentFrame = 8;
-				filler = 1;
-			}
-			else if (xvelocity < 0 && (filler == 1 || filler == 3))
-			{
-				currentFrame = 9;
-				if (filler == 1) filler += 1;
-				else filler = 2;
-			}
-			else if (xvelocity < 0 && filler == 2)
-			{
-				currentFrame = 10;
-				filler = 3;
 			}
 			else
 			{
 				currentFrame = 0;
-				filler = 0;
 			}
 		}
 		else
@@ -217,16 +193,18 @@ namespace Tmpl8
 		return currentFrame;
 	}
 
-	void Player::Moving(Tmpl8::vec2 startPos)
+	void Player::Moving(Tmpl8::vec2 startPos, float deltatime)
 	{
-		Gravity();
+		bool moving;
+		Gravity(deltatime);
 		Boundries(startPos);
-		if (GetAsyncKeyState(VK_LEFT)) { xvelocity -= 1.0f; }
-		else if (GetAsyncKeyState(VK_RIGHT)) { xvelocity += 1.0f; }
-		else if (onGround == true) { Friction(); }
-		if (GetAsyncKeyState(VK_UP) && onGround == true) { Jump(); }
+		if (GetAsyncKeyState(VK_LEFT)) { moving = true, xvelocity -= movementSpeed * deltatime; }
+		else if (GetAsyncKeyState(VK_RIGHT)) { moving = true, xvelocity += movementSpeed * deltatime; }
+		else { moving = false; }
+		if (GetAsyncKeyState(VK_UP) && onGround == true) { Jump(deltatime); }
 		ClampVelocity();
-		Accelerate();
+		Accelerate(deltatime);
+		Friction(deltatime, moving);
 	}
 
 	void Player::Draw(Tmpl8::Surface* surface, Sprites playersprite, bool show) // drawing the player
