@@ -33,7 +33,7 @@ private:
 	HBox playerSize;
 
 	float posX = 0, posY = 0, xvelocity = 0, yvelocity = 0, epsi = 0.1, 
-	movementSpeed = 8.5f, fricspeed = 7.0f, airresist = 4.0f, jumpSpeed = 400.0f, gravspeed = 10.0f;
+	movementSpeed = 8.5f, fricspeed = 7.0f, airresist = 4.0f, jumpSpeed = 450.0f, gravspeed = 10.0f;
 	bool onGround = false;
 	int currentFrame = 12, filler = 1;
 
